@@ -38,6 +38,7 @@ from pr_agent.algo.language_handler import build_language_file_matcher
 from pr_agent.algo.output_models import PRType
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.config_loader import get_settings, get_verbosity_level
+from pr_agent.config_security import REPO_HOST_ONLY_KEYS_BY_SECTION
 from pr_agent.log import get_logger
 
 _ENCODED_USER_TEXT_PREFIX = "__pr_agent_encoded_text__:"
@@ -824,7 +825,15 @@ def update_settings_from_args(args: List[str]) -> List[str]:
                     other_args.append(arg)
                     continue
                 key, value = _fix_key_value(*vals)
-                get_settings().set(key, value)
+                if (
+                    isinstance(value, dict)
+                    and "." not in key
+                    and key.lower() in REPO_HOST_ONLY_KEYS_BY_SECTION
+                ):
+                    for nested_key, nested_value in value.items():
+                        get_settings().set(f"{key}.{nested_key}", nested_value)
+                else:
+                    get_settings().set(key, value)
                 get_logger().info(f'Updated setting {key} to: "{value}"')
             else:
                 other_args.append(arg)

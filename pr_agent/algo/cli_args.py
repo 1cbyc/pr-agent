@@ -145,9 +145,9 @@ class CliArgs:
         if mapping is None:
             return None
         section, parsed_value = mapping
-        # Sections governed by an allowlist or by CLI-only restrictions retain their
-        # existing whole-section policy. Per-key repo host-only sections, by contrast,
-        # may contain ordinary configurable keys that must be checked individually.
+        # Retain the whole-section policy for sections governed by an allowlist or by
+        # CLI-only restrictions. Check per-key repo host-only sections individually so
+        # their ordinary configurable keys remain available.
         if (
             section in REPO_OVERRIDABLE_KEYS_BY_HOST_SECTION
             or section in CLI_HOST_ONLY_KEYS_BY_SECTION
@@ -156,9 +156,8 @@ class CliArgs:
         paths = CliArgs._mapping_setting_paths(section, parsed_value)
         if paths is None:
             return _MAPPING_TOO_COMPLEX_ARG
-        # A non-empty mapping updates only its nested keys, so validate those paths
-        # individually. An empty mapping still targets the whole section and must retain
-        # the section-level protection used for non-mapping replacements.
+        # Validate each nested path in a non-empty mapping. Retain section-level
+        # protection for an empty mapping because it still targets the whole section.
         for path in paths or [section]:
             offending = CliArgs._blocked_setting_path(path, forbidden_cli_args)
             if offending:

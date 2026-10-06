@@ -68,6 +68,19 @@ def test_a_parseable_value_is_still_converted(monkeypatch, debug_logging):
     assert settings.pr_reviewer.num_max_findings == 5
 
 
+def test_provider_mapping_preserves_host_settings(monkeypatch, debug_logging):
+    settings = get_settings()
+    monkeypatch.setattr(settings.github, "deployment_type", "app")
+    monkeypatch.setattr(settings.github, "base_url", "https://github.example/api/v3")
+    monkeypatch.setattr(settings.github, "publish_as_check_run", False)
+
+    update_settings_from_args(["--github={publish_as_check_run: true}"])
+
+    assert settings.github.publish_as_check_run is True
+    assert settings.github.deployment_type == "app"
+    assert settings.github.base_url == "https://github.example/api/v3"
+
+
 async def test_a_braced_instruction_reaches_the_tool(monkeypatch, debug_logging, review_tool):
     settings = get_settings()
     monkeypatch.setattr(settings.pr_reviewer, "extra_instructions", "")
