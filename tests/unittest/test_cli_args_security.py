@@ -146,10 +146,10 @@ ALLOWED_ARGS_SINGLE = [
     # a mapping value whose nested keys are all allowed stays accepted
     "--qdrant={timeout: 5, prefer_grpc: true}",
     "--pr_similar_issue.max_issues_to_scan=50",
-    "--github={publish_as_check_run: true}",
-    "--gitlab={handle_push_trigger: true}",
-    "--bitbucket={identity_request_timeout: 10}",
-    "--gitea={handle_push_trigger: true}",
+    "--github.publish_as_check_run=true",
+    "--gitlab.handle_push_trigger=true",
+    "--bitbucket.identity_request_timeout=10",
+    "--gitea.handle_push_trigger=true",
     # non-flag arguments are not validated against the forbidden list
     "some-positional-arg",
     "yes",

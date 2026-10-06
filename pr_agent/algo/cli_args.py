@@ -145,20 +145,11 @@ class CliArgs:
         if mapping is None:
             return None
         section, parsed_value = mapping
-        # Retain the whole-section policy for sections governed by an allowlist or by
-        # CLI-only restrictions. Check per-key repo host-only sections individually so
-        # their ordinary configurable keys remain available.
-        if (
-            section in REPO_OVERRIDABLE_KEYS_BY_HOST_SECTION
-            or section in CLI_HOST_ONLY_KEYS_BY_SECTION
-        ):
-            return CliArgs._blocked_setting_path(section, forbidden_cli_args)
         paths = CliArgs._mapping_setting_paths(section, parsed_value)
         if paths is None:
             return _MAPPING_TOO_COMPLEX_ARG
-        # Validate each nested path in a non-empty mapping. Retain section-level
-        # protection for an empty mapping because it still targets the whole section.
-        for path in paths or [section]:
+        # The section itself is checked too: an empty mapping has no nested paths.
+        for path in [section, *paths]:
             offending = CliArgs._blocked_setting_path(path, forbidden_cli_args)
             if offending:
                 return offending
@@ -213,18 +204,17 @@ class CliArgs:
                     arg_word = arg.lower()
                     # replace double underscore with dot, e.g. --openai__key -> --openai.key
                     arg_word = arg_word.replace('__', '.')
+                    host_only_arg = CliArgs._host_only_setting_arg(arg_word)
+                    if host_only_arg:
+                        return False, host_only_arg
                     # A mapping value sets many keys at once, so validate each nested
                     # section.key path against the host-only and forbidden lists instead of
-                    # rejecting the whole section or matching value text, which may legitimately
-                    # mention a key name.
+                    # matching the value text, which may legitimately mention a key name.
                     mapping_offending_arg = CliArgs._mapping_value_offending_arg(arg, forbidden_cli_args)
                     if mapping_offending_arg is not None:
                         if mapping_offending_arg:
                             return False, mapping_offending_arg
                         continue
-                    host_only_arg = CliArgs._host_only_setting_arg(arg_word)
-                    if host_only_arg:
-                        return False, host_only_arg
                     for forbidden_arg_word in forbidden_cli_args:
                         if forbidden_arg_word in arg_word:
                             return False, forbidden_arg_word
